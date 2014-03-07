@@ -1,0 +1,41 @@
+\documentclass[9pt,a4paper]{{article}}
+\usepackage{{wallpaper,helvet,xcolor,array,colortbl,booktabs,hyperref}}
+\ULCornerWallPaper{{1}}{{background.pdf}}
+\renewcommand{{\familydefault}}{{\sfdefault}}
+\newcommand\VRule[1][\arrayrulewidth]{{\vrule width #1}}
+\definecolor{{blue}}{{RGB}}{{0,64,122}}
+\DeclareTextFontCommand{{\textbf}}{{\bfseries\color{{blue}}}}
+\renewcommand\UrlFont{{\color{{blue}}\sffamily}}
+
+\begin{{document}}
+\topskip0pt
+\thispagestyle{{empty}}
+\vspace*{{\fill}}
+\hskip-2.0cm
+\renewcommand{{\arraystretch}}{{2}}
+\arrayrulecolor{{blue}}
+\begin{{tabular}}[c]{{!{{\color{{blue}}\VRule[2pt]}}p{{3.8cm}} p{{10.5cm}}!{{\color{{blue}}\VRule[2pt]}}}}
+\specialrule{{2pt}}{{0pt}}{{0pt}}
+\textbf{{Citation}} &  {first} 
+\newline 
+\textbf{{{title}}} \newline
+{last} \\
+\specialrule{{1pt}}{{0pt}}{{0pt}}
+\textbf{{Archived version}} &  Author manuscript: the content is identical to the content of the published paper, but without the final typesetting by the publisher \\
+\specialrule{{1pt}}{{0pt}}{{0pt}}
+\textbf{{Published version}} &  \url{{{doi}}}\\
+\specialrule{{1pt}}{{0pt}}{{0pt}}
+\textbf{{Publisher homepage}} &  \url{{{journal_url}}}\\
+\specialrule{{1pt}}{{0pt}}{{0pt}}
+\textbf{{Author contact}} & E-mail: \href{{mailto:{email}}}{{\color{{blue}}{email}}} \newline
+Phone number: \textit{{{tel}}} \\
+\specialrule{{1pt}}{{0pt}}{{0pt}}
+\textbf{{IR}} & \url{{{lirias_handle}}}\\
+\specialrule{{2pt}}{{0pt}}{{0pt}}
+\end{{tabular}}
+
+\begin{{center}}
+\emph{{\color{{blue}}(article begins on next page)}}
+\end{{center}}
+\vspace*{{\fill}}
+\end{{document}}
