@@ -43,7 +43,7 @@ with open('open_access.tex', 'r') as f:
 journal_titles = map(sort_title, [r[0] for r in journals])
 conference_titles = map(sort_title, [r[0] for r in conferences])
 
-url = 'https://lirias.kuleuven.be/cv?u=U' + u_number + '&link=true'
+url = 'https://lirias.kuleuven.be/cv?u=U' + u_number + '&link=true&layout=APA-style'
 page = urllib2.urlopen(url)
 soup = BeautifulSoup(page.read())
 
@@ -74,12 +74,15 @@ for p in soup.find_all('p'):
         loc = get_bib(p, 'congresslocation')
         congress = get_bib(p, 'congressname')
         if header == 'IT':
-            journal_url = journals[journal_titles.index(sort_title(journal))][9]  # Get journal url.
+            try:
+                journal_url = journals[journal_titles.index(sort_title(journal))][9]  # Get journal url.
+            except:
+                journal_url = raw_input("Couldn't find journal. Please provide a url for the journal: ")
         elif header == 'IC':
             match = difflib.get_close_matches(sort_title(congress + date), conference_titles)
             answer = 'n'
             i = 0
-            while answer.lower() == 'n' or i < 3:
+            while answer.lower() == 'n' and i < len(match):
                 c = conferences[conference_titles.index(match[i])][0]
                 answer = raw_input('Do we have a match (y/n):\n lirias: ' + congress + '\n best guess: ' + c)
                 if answer.lower() == 'y':
@@ -104,3 +107,4 @@ for p in soup.find_all('p'):
             f.write(template.format(**d))
         # make pdf
         subprocess.call(["pdflatex", "-halt-on-error", filename])
+        
