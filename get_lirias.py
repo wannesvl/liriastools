@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-import urllib2, httplib, urllib, re, difflib, subprocess
+import urllib2, httplib, urllib, re, difflib, subprocess, tempfile
 
 u_number = '0063507'
 name = 'Van Loock, W.'
@@ -38,7 +38,7 @@ with open('OPACCnfList.txt', 'r') as f:
     conferences = [l.rstrip('\r\n').strip('"').split('","') for l in f.readlines()]
 
 with open('open_access.tex', 'r') as f:
-    template = f.read()
+    template = unicode(f.read())
 
 journal_titles = map(sort_title, [r[0] for r in journals])
 conference_titles = map(sort_title, [r[0] for r in conferences])
@@ -84,9 +84,9 @@ for p in soup.find_all('p'):
             i = 0
             while answer.lower() == 'n' and i < len(match):
                 c = conferences[conference_titles.index(match[i])][0]
-                answer = raw_input('Do we have a match (y/n):\n lirias: ' + congress + '\n best guess: ' + c)
+                answer = raw_input('Do we have a match (y/n):\nlirias: ' + congress + '\nbest guess: ' + c + ' ')
                 if answer.lower() == 'y':
-                    journal_url = conferences[conference_titles.index(match[i])][9]
+                    journal_url = conferences[conference_titles.index(match[i])][7]
                     break
                 i += 1
             else:
@@ -103,8 +103,11 @@ for p in soup.find_all('p'):
             'lirias_handle': IR
             }
         filename = title.replace(' ', '_').lower() + '.tex'
-        with open(filename, 'w') as f:
-            f.write(template.format(**d))
+        with open(filename, 'wb') as f:
+            f.write(template.format(**d).encode('utf-8'))
         # make pdf
-        subprocess.call(["pdflatex", "-halt-on-error", filename])
-        
+        out = tempfile.TemporaryFile()
+        ec = subprocess.call(["pdflatex", "-halt-on-error", filename], stdout=out)
+
+# Clean up files
+subprocess.call(["latexmk", "-c"])
