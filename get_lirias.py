@@ -1,5 +1,6 @@
+# coding: utf-8
 from bs4 import BeautifulSoup
-import urllib2, httplib, urllib, re, difflib, subprocess, tempfile
+import urllib2, httplib, urllib, re, difflib, subprocess, tempfile, codecs
 
 u_number = '0063507'
 name = 'Van Loock, W.'
@@ -32,22 +33,33 @@ def sort_title(title, p=re.compile('[\W_]+')):
 
 
 with open('OPACJrnList.txt', 'r') as f:
-    journals = [l.rstrip('\r\n').strip('"').split('","') for l in f.readlines()]
+    journals_ieee = [l.rstrip('\r\n').strip('"').split('","') for l in f.readlines()]
+
+with open('jnlactive.csv', 'rb') as f:
+    journals_sd = [l.rstrip('\r\n').strip('"').split('","') for l in f.readlines()]
 
 with open('OPACCnfList.txt', 'r') as f:
-    conferences = [l.rstrip('\r\n').strip('"').split('","') for l in f.readlines()]
+    conferences_ieee = [l.rstrip('\r\n').strip('"').split('","') for l in f.readlines()]
 
 with open('open_access.tex', 'r') as f:
     template = unicode(f.read())
 
-journal_titles = map(sort_title, [r[0] for r in journals])
-conference_titles = map(sort_title, [r[0] for r in conferences])
+# Make dictionary of journal and conference titles
+url_sd = 'http://www.sciencedirect.com/science/journal/'
+journals = {sort_title(j[0]): j[9] for j in journals_ieee}
+journals.update({sort_title(j[0]): url_sd + j[1] for j in journals_sd})
+conferences = {sort_title(j[0]): (j[7], j[0]) for j in conferences_ieee}
+
+# journal_titles_ieee = map(sort_title, [r[0] for r in journals_ieee])
+# journal_titles_sd = map(sort_title, [r[0] for r in journals_sd])
+# conference_titles = map(sort_title, [r[0] for r in conferences])
 
 url = 'https://lirias.kuleuven.be/cv?u=U' + u_number + '&link=true&layout=APA-style'
 page = urllib2.urlopen(url)
 soup = BeautifulSoup(page.read())
 
 lirias_url = 'http://lirias.kuleuven.be/handle/123456789/'
+
 # Find all 'h1' tags
 for p in soup.find_all('p'):
     # Get header text
@@ -74,19 +86,18 @@ for p in soup.find_all('p'):
         loc = get_bib(p, 'congresslocation')
         congress = get_bib(p, 'congressname')
         if header == 'IT':
-            try:
-                journal_url = journals[journal_titles.index(sort_title(journal))][9]  # Get journal url.
-            except:
+            journal_url = journals.get(sort_title(journal), None)  # Get journal url.
+            if journal_url is None:
                 journal_url = raw_input("Couldn't find journal. Please provide a url for the journal: ")
         elif header == 'IC':
-            match = difflib.get_close_matches(sort_title(congress + date), conference_titles)
+            match = difflib.get_close_matches(sort_title(congress + date), conferences.keys())
             answer = 'n'
             i = 0
             while answer.lower() == 'n' and i < len(match):
-                c = conferences[conference_titles.index(match[i])][0]
+                c = conferences[match[i]][1]
                 answer = raw_input('Do we have a match (y/n):\nlirias: ' + congress + '\nbest guess: ' + c + ' ')
                 if answer.lower() == 'y':
-                    journal_url = conferences[conference_titles.index(match[i])][7]
+                    journal_url = conferences[match[i]][0]
                     break
                 i += 1
             else:
@@ -94,17 +105,17 @@ for p in soup.find_all('p'):
         # Make tex file
         citation = p.get_text().split(title)
         d = {'first': citation[0].strip('. '),
-            'title': title,
-            'last': citation[1].strip('. '),
-            'doi': doi,
-            'journal_url': journal_url,
-            'email': email,
-            'tel': tel,
-            'lirias_handle': IR
-            }
+             'title': title,
+             'last': citation[1].strip('. '),
+             'doi': doi,
+             'journal_url': journal_url,
+             'email': email,
+             'tel': tel,
+             'lirias_handle': IR
+             }
         filename = title.replace(' ', '_').lower() + '.tex'
-        with open(filename, 'wb') as f:
-            f.write(template.format(**d).encode('utf-8'))
+        with codecs.open(filename, 'wt', encoding='utf-8') as f:
+            f.write(template.format(**d))
         # make pdf
         out = tempfile.TemporaryFile()
         ec = subprocess.call(["pdflatex", "-halt-on-error", filename], stdout=out)
